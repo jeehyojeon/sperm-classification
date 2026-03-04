@@ -1,0 +1,32 @@
+# Experiment Configuration for MICCAI 2026 Manuscript
+
+# Model architecture
+backbone: 'densenet121'
+attention: 'cbam' # CBAM Attention module enabled
+
+# Hyperparameters
+batch_size: 32
+learning_rate: 2e-5 # Optimized for Stable Training
+num_epochs: 50
+optimizer: 'adam'
+scheduler: 'step'
+
+# Loss settings: Bitwise Valley Focal Loss
+loss_type: 'focal'
+gamma: 6.0
+alpha: 0.98
+
+# Bitwise Valley Weights (per label strength 0-5)
+# These weights handle label uncertainty and class imbalance
+bitwise_weights: [3.5, 1.0, 0.3, 0.3, 0.4, 0.5]
+
+# Reproducibility
+seed: 42
+
+# Inference settings
+detection_threshold: 0.5
+normality_threshold: 0.4271 # Optimized pipeline threshold
+
+# Paths
+save_dir: 'runs/miccai_best_exp'
+yolo_weight_path: 'weights/yolo_detector.pt'
