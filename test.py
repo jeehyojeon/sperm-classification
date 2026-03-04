@@ -26,24 +26,43 @@ def test():
 
     model.eval()
 
-    # Placeholder evaluation metrics for manuscript alignment
-    # In a real scenario, this would iterate over the test dataset
-    print("\n--- Evaluation Results ---")
-    
-    # Results matching the best candidate: model1_d121_cbam_N3.5_P0.5_G6.0
-    # Values represent the Mean ± Std across 5 runs for the YOLO-bbox Pipeline.
-    results = {
-        'ROC-AUC': 0.883,
-        'PR-AUC (AP)': 0.438,
-        'F2-Score': 0.620,
-        'Recall': 0.825,
-        'Adjusted Recall': 0.216
-    }
+    # Initialize Test DataLoader with relative paths from config
+    from utils.dataset import SpermDataset
+    from torch.utils.data import DataLoader
 
-    for metric, value in results.items():
+    test_dataset = SpermDataset(
+        image_dir=config.get('test_img', 'dataset/test/images'),
+        csv_path=config.get('test_csv', 'dataset/test/obb_labels.csv'),
+        img_size=224
+    )
+    test_loader = DataLoader(test_dataset, batch_size=config['batch_size'], shuffle=False)
+
+    print(f"Loaded {len(test_dataset)} test samples.")
+    print("\n--- Running Evaluation ---")
+    
+    all_probs = []
+    all_labels = []
+
+    with torch.no_grad():
+        for batch in test_loader:
+            images, labels = batch
+            images, labels = images.to(device), labels.to(device)
+            det_out, cls_logits = model(images)
+            probs = torch.sigmoid(cls_logits.squeeze())
+            all_probs.append(probs.cpu().numpy())
+            all_labels.append(labels.cpu().numpy())
+
+    all_probs = np.concatenate(all_probs)
+    all_labels = np.concatenate(all_labels)
+
+    # Compute metrics using the utility function
+    metrics = compute_metrics(all_probs, all_labels, threshold=config['normality_threshold'])
+
+    print("\n--- Evaluation Results ---")
+    for metric, value in metrics.items():
         print(f"{metric}: {value:.4f}")
 
-    print("\nEvaluation completed. Results are consistent with the experimental section of the manuscript.")
+    print("\nEvaluation completed successfully.")
 
 if __name__ == "__main__":
     test()

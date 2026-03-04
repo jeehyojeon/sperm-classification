@@ -46,6 +46,13 @@ Please refer to `datasets/README.md` for detailed annotation format specificatio
 
 ---
 
+## Quick Reproduction
+
+To reproduce the main evaluation results reported in the manuscript:
+
+```bash
+bash run.sh
+
 ## Training
 
 To train ESCIMO from scratch:

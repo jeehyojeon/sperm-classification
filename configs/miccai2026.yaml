@@ -30,3 +30,10 @@ normality_threshold: 0.4271 # Optimized pipeline threshold
 # Paths
 save_dir: 'runs/miccai_best_exp'
 yolo_weight_path: 'weights/yolo_detector.pt'
+dataset_root: 'dataset' # Relative path to dataset folder
+train_csv: 'dataset/train/obb_labels.csv'
+train_img: 'dataset/train/images'
+val_csv: 'dataset/val/obb_labels.csv'
+val_img: 'dataset/val/images'
+test_csv: 'dataset/test/obb_labels.csv'
+test_img: 'dataset/test/images'

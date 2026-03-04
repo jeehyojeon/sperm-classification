@@ -44,26 +44,50 @@ def train():
     # Initialize loss function
     criterion = get_loss_fn(config)
 
-    # Mock DataLoaders (to be replaced with real data loading logic as per dataset README)
-    # train_loader = DataLoader(dataset, batch_size=config['batch_size'], shuffle=True)
+    # Initialize DataLoaders with relative paths from config
+    from utils.dataset import SpermDataset
     
+    train_dataset = SpermDataset(
+        image_dir=config.get('train_img', 'dataset/train/images'),
+        csv_path=config.get('train_csv', 'dataset/train/obb_labels.csv'),
+        img_size=224
+    )
+    val_dataset = SpermDataset(
+        image_dir=config.get('val_img', 'dataset/val/images'),
+        csv_path=config.get('val_csv', 'dataset/val/obb_labels.csv'),
+        img_size=224
+    )
+
+    train_loader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=config['batch_size'], shuffle=False)
+    
+    logger.info(f"Loaded {len(train_dataset)} training samples and {len(val_dataset)} validation samples.")
     logger.info("Model initialized. Starting training loop...")
 
     best_val_loss = float('inf')
     for epoch in range(config['num_epochs']):
         model.train()
-        # for batch in train_loader:
-        #     images, labels, strengths = batch
-        #     optimizer.zero_grad()
-        #     det_out, cls_logits = model(images)
-        #     loss = criterion(cls_logits, labels, strengths)
-        #     loss.backward()
-        #     optimizer.step()
+        for batch in train_loader:
+            images, labels = batch
+            images, labels = images.to(device), labels.to(device)
+            optimizer.zero_grad()
+            det_out, cls_logits = model(images)
+            # Use raw logits for BCEWithLogitsLoss / FocalLoss
+            loss = criterion(cls_logits.squeeze(), labels)
+            loss.backward()
+            optimizer.step()
         
-        # Validation logic here...
+        # Validation logic
         model.eval()
-        # val_loss = ... (calculation)
-        val_loss = 1.0 / (epoch + 1) # Placeholder logic minimizing loss
+        val_loss = 0
+        with torch.no_grad():
+            for batch in val_loader:
+                images, labels = batch
+                images, labels = images.to(device), labels.to(device)
+                det_out, cls_logits = model(images)
+                val_loss += criterion(cls_logits.squeeze(), labels).item()
+        
+        val_loss /= len(val_loader)
         
         logger.info(f"Epoch {epoch+1}/{config['num_epochs']} - Val Loss: {val_loss:.4f}")
 
