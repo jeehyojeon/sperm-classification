@@ -4,22 +4,32 @@ The dataset used in this study is not publicly available due to privacy and ethi
 
 ## Expected Directory Structure
 
+```
 dataset/
-  train/
-    images/
-    labels/
-  val/
-    images/
-    labels/
-  test/
-    images/
-    labels/
+├── train/
+│   ├── images/
+│   ├── labels/
+│   ├── obb/
+│   └── obb_labels.csv
+├── val/
+│   ├── images/
+│   ├── labels/
+│   ├── obb/
+│   └── obb_labels.csv
+└── test/
+    ├── images/
+    ├── labels/
+    ├── obb/
+    └── obb_labels.csv
+```
 
 ## Annotation Format
 
-Each label file contains:
-- bounding box coordinates
-- binary normality label (0: abnormal, 1: normal)
+Each subset (train/val/test) contains:
+- `images/`: High-resolution microscopy images.
+- `labels/`: YOLO-format bounding box labels.
+- `obb_labels.csv`: Oriented Bounding Box (OBB) labels with normality labels (0: abnormal, 1: normal).
+- `obb/`: Cropped sperm images based on alignment and OBB.
 
 ## Data Access
 
