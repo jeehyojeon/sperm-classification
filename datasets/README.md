@@ -1,6 +1,6 @@
 # Dataset
 
-The dataset used in this study is not publicly available due to privacy and ethical restrictions.
+The dataset used in this study is collected and used under IRB review. It is currently not yet available due to privacy concerns. 
 
 ## Expected Directory Structure
 
@@ -8,19 +8,13 @@ The dataset used in this study is not publicly available due to privacy and ethi
 dataset/
 ├── train/
 │   ├── images/
-│   ├── labels/
-│   ├── obb/
-│   └── obb_labels.csv
+│   └── labels/
 ├── val/
 │   ├── images/
-│   ├── labels/
-│   ├── obb/
-│   └── obb_labels.csv
+│   └── labels/
 └── test/
     ├── images/
-    ├── labels/
-    ├── obb/
-    └── obb_labels.csv
+    └── labels/
 ```
 
 ## Annotation Format
@@ -28,8 +22,6 @@ dataset/
 Each subset (train/val/test) contains:
 - `images/`: High-resolution microscopy images.
 - `labels/`: YOLO-format bounding box labels.
-- `obb_labels.csv`: Oriented Bounding Box (OBB) labels with normality labels (0: abnormal, 1: normal).
-- `obb/`: Cropped sperm images based on alignment and OBB.
 
 ## Data Access
 
