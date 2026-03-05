@@ -1,5 +1,6 @@
 import torch
 import argparse
+import os
 from models.model import SpermNormalityModel
 from PIL import Image
 import torchvision.transforms as T
@@ -9,7 +10,19 @@ def load_model(weight_path, backbone='densenet121'):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = SpermNormalityModel(backbone_type=backbone).to(device)
     if os.path.exists(weight_path):
-        model.load_state_dict(torch.load(weight_path, map_location=device))
+        checkpoint = torch.load(weight_path, map_location=device)
+        new_state_dict = {}
+        for k, v in checkpoint.items():
+            if k.startswith('features.'):
+                new_state_dict[k.replace('features.', 'backbone.')] = v
+            elif k.startswith('cbam.'):
+                new_state_dict[k.replace('cbam.', 'classification_head.cbam.')] = v
+            elif k.startswith('classifier.'):
+                new_state_dict[k.replace('classifier.', 'classification_head.classifier.')] = v
+            else:
+                new_state_dict[k] = v
+        model.load_state_dict(new_state_dict, strict=False)
+        print(f"Loaded weights from {weight_path}")
     model.eval()
     return model, device
 

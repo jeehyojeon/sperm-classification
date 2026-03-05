@@ -33,8 +33,20 @@ def train():
     # Load pre-existing weights if available
     weight_path = os.path.join('weights', 'best_model.pt')
     if os.path.exists(weight_path):
-        model.load_state_dict(torch.load(weight_path, map_location=device))
-        logger.info(f"Loaded weights from {weight_path}")
+        checkpoint = torch.load(weight_path, map_location=device)
+        # Handle key remapping from older formats or different prefixes
+        new_state_dict = {}
+        for k, v in checkpoint.items():
+            if k.startswith('features.'):
+                new_state_dict[k.replace('features.', 'backbone.')] = v
+            elif k.startswith('cbam.'):
+                new_state_dict[k.replace('cbam.', 'classification_head.cbam.')] = v
+            elif k.startswith('classifier.'):
+                new_state_dict[k.replace('classifier.', 'classification_head.classifier.')] = v
+            else:
+                new_state_dict[k] = v
+        model.load_state_dict(new_state_dict, strict=False)
+        logger.info(f"Loaded weights from {weight_path} (Remapped keys, strict=False)")
     model.eval() # This line was explicitly requested, though typically model.train() would be called before the training loop.
 
     # Initialize optimizer and scheduler
@@ -68,12 +80,12 @@ def train():
     for epoch in range(config['num_epochs']):
         model.train()
         for batch in train_loader:
-            images, labels = batch
-            images, labels = images.to(device), labels.to(device)
+            images, labels, strengths = batch
+            images, labels, strengths = images.to(device), labels.to(device), strengths.to(device)
             optimizer.zero_grad()
             det_out, cls_logits = model(images)
             # Use raw logits for BCEWithLogitsLoss / FocalLoss
-            loss = criterion(cls_logits.squeeze(), labels)
+            loss = criterion(cls_logits, labels, strengths)
             loss.backward()
             optimizer.step()
         
@@ -82,12 +94,15 @@ def train():
         val_loss = 0
         with torch.no_grad():
             for batch in val_loader:
-                images, labels = batch
-                images, labels = images.to(device), labels.to(device)
+                images, labels, strengths = batch
+                images, labels, strengths = images.to(device), labels.to(device), strengths.to(device)
                 det_out, cls_logits = model(images)
-                val_loss += criterion(cls_logits.squeeze(), labels).item()
+                val_loss += criterion(cls_logits, labels, strengths).item()
         
-        val_loss /= len(val_loader)
+        if len(val_loader) > 0:
+            val_loss /= len(val_loader)
+        else:
+            val_loss = 0.0
         
         logger.info(f"Epoch {epoch+1}/{config['num_epochs']} - Val Loss: {val_loss:.4f}")
 

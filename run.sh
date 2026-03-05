@@ -7,6 +7,12 @@ set -e
 
 echo "Starting full pipeline reproduction..."
 
+# 0. Data Preparation
+if [ ! -d "dataset" ]; then
+    echo "Dataset not found. Generating dummy dataset for verification..."
+    python tools/generate_dummy_data.py
+fi
+
 # 1. Training
 echo "Running Training Phase..."
 python train.py --config configs/miccai2026.yaml

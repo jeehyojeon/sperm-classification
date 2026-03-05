@@ -9,7 +9,7 @@ This repository corresponds exactly to the submitted MICCAI 2026 manuscript. No 
 ## Description
 
 ESCIMO is an end-to-end framework for automated sperm detection and normality classification.  
-The detection module is based on a YOLO-style architecture, followed by a morphology-aware classification head for sperm normality assessment.  
+The detection module constitutes localization module and classification module for sperm normality assessment.  
 
 To address severe class imbalance inherent in infertility-center datasets, ESCIMO employs weighted loss functions to stabilize training and improve minority-class sensitivity.
 
@@ -46,12 +46,15 @@ Please refer to `datasets/README.md` for detailed annotation format specificatio
 
 ---
 
-## Quick Reproduction
+## Quick Start
 
-To reproduce the main evaluation results reported in the manuscript:
+Since the original dataset is unavailable now, the following command will automatically generate a **dummy dataset** and run the entire pipeline (training, weight loading, and evaluation) for verification:
 
 ```bash
 bash run.sh
+```
+
+---
 
 ## Training
 
@@ -65,10 +68,20 @@ python train.py --config configs/miccai2026.yaml
 
 ## Evaluation
 
-To evaluate using the best saved weights:
+To evaluate using the saved weights:
 
 ```bash
 python test.py --config configs/miccai2026.yaml
+```
+
+---
+
+## Inference
+
+To run inference on a single test image using the best model weights:
+
+```bash
+python inference.py --image dataset/test/images/dummy_0.png --weights weights/best_model.pt
 ```
 
 ---
@@ -83,7 +96,7 @@ python test.py --config configs/miccai2026.yaml
 | Recall | 0.852 ± 0.011 |
 | Adjusted Recall | 0.216 ± 0.022 |
 
-The reported results correspond to Table 1 in the submitted manuscript.
+The reported results below are obtained using the **original private dataset** as described in Table 1 of the submitted manuscript. Results using dummy data will vary significantly.
 
 ---
 

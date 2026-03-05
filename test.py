@@ -19,8 +19,19 @@ def test():
     
     weight_path = os.path.join('weights', 'best_model.pt')
     if os.path.exists(weight_path):
-        model.load_state_dict(torch.load(weight_path, map_location=device))
-        print(f"Loaded weights from {weight_path}")
+        checkpoint = torch.load(weight_path, map_location=device)
+        new_state_dict = {}
+        for k, v in checkpoint.items():
+            if k.startswith('features.'):
+                new_state_dict[k.replace('features.', 'backbone.')] = v
+            elif k.startswith('cbam.'):
+                new_state_dict[k.replace('cbam.', 'classification_head.cbam.')] = v
+            elif k.startswith('classifier.'):
+                new_state_dict[k.replace('classifier.', 'classification_head.classifier.')] = v
+            else:
+                new_state_dict[k] = v
+        model.load_state_dict(new_state_dict, strict=False)
+        print(f"Loaded weights from {weight_path} (Remapped keys, strict=False)")
     else:
         print("Warning: weights/best_model.pt not found. Using randomly initialized weights.")
 
@@ -45,12 +56,16 @@ def test():
 
     with torch.no_grad():
         for batch in test_loader:
-            images, labels = batch
+            images, labels, _ = batch # strengths are not used for evaluation
             images, labels = images.to(device), labels.to(device)
             det_out, cls_logits = model(images)
-            probs = torch.sigmoid(cls_logits.squeeze())
+            probs = torch.sigmoid(cls_logits.view(-1))
             all_probs.append(probs.cpu().numpy())
-            all_labels.append(labels.cpu().numpy())
+            all_labels.append(labels.view(-1).cpu().numpy())
+
+    if len(all_probs) == 0:
+        print("\nError: No samples found for evaluation. Please check your test dataset.")
+        return
 
     all_probs = np.concatenate(all_probs)
     all_labels = np.concatenate(all_labels)

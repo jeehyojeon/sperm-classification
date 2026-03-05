@@ -4,7 +4,8 @@ def compute_metrics(y_true, y_pred, threshold=0.4271):
     """
     Compute key performance metrics for sperm normality classification.
     """
-    y_pred_binary = (y_pred >= threshold).astype(int)
+    y_true = y_true.astype(int).flatten()
+    y_pred_binary = (y_pred >= threshold).astype(int).flatten()
     
     # Calculate base metrics
     recall = recall_score(y_true, y_pred_binary, zero_division=0)

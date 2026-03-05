@@ -27,23 +27,30 @@ class SpermDataset(Dataset):
         
         # Load labels
         self.label_map = {}
+        self.strength_map = {}
         if os.path.exists(csv_path):
             with open(csv_path, newline="", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 for row in reader:
                     fname = os.path.basename(row["filename"]).strip().lower()
-                    cls_raw = str(row["class"]).strip().lower()
+                    cls_raw_val = str(row["class"]).strip().lower()
+                    # Map to strength (0-5)
+                    try:
+                        strength = int(float(cls_raw_val))
+                        strength = max(0, min(5, strength))
+                    except ValueError:
+                        strength = 0
+                    
                     # normal->1, abnormal->0
-                    if cls_raw in ("0", "false", "neg", "abnormal"):
+                    if cls_raw_val in ("0", "false", "neg", "abnormal"):
                         y = 0
-                    elif cls_raw in ("1", "true", "pos", "normal"):
+                    elif cls_raw_val in ("1", "true", "pos", "normal"):
                         y = 1
                     else:
-                        try:
-                            y = 1 if int(float(cls_raw)) >= 1 else 0
-                        except ValueError:
-                            y = 0
+                        y = 1 if strength >= 1 else 0
+                    
                     self.label_map[fname] = y
+                    self.strength_map[fname] = strength
 
         self.samples = []
         if self.image_dir.exists():
@@ -70,4 +77,5 @@ class SpermDataset(Dataset):
         img = Image.open(img_path).convert("RGB")
         x = self.transform(img)
         y = torch.tensor(self.label_map[img_path.name.lower()], dtype=torch.float32)
-        return x, y
+        strength = torch.tensor(self.strength_map[img_path.name.lower()], dtype=torch.long)
+        return x, y, strength

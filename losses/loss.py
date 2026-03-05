@@ -19,9 +19,11 @@ class BitwiseValleyFocalLoss(nn.Module):
     def forward(self, logits, targets, strengths):
         # strengths should be the number of positive annotations (0-5)
         ce_loss = F.binary_cross_entropy_with_logits(
-            logits.squeeze(), targets, reduction='none'
+            logits.view(-1), targets.view(-1), reduction='none'
         )
-        probs = torch.sigmoid(logits.squeeze())
+        probs = torch.sigmoid(logits.view(-1))
+        targets = targets.view(-1)
+        strengths = strengths.view(-1)
         # Correctly select p_t based on the target class
         p_t = probs * targets + (1 - probs) * (1 - targets)
         # alpha_t for class balancing
